@@ -35,8 +35,9 @@
 // Tap Dance
 enum {
   TD_OESZ,
-}
-qk_tap_dance_action_t tap_dance_actions[] = {
+};
+
+tap_dance_action_t tap_dance_actions[] = {
   // ö&↓↓ß
   [TD_OESZ] = ACTION_TAP_DANCE_DOUBLE(DE_ODIA, DE_SS),
 };
