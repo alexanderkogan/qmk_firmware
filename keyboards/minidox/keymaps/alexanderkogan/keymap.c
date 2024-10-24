@@ -1,161 +1,241 @@
 #include QMK_KEYBOARD_H
+#include "keymap_german.h"
 
+#define _MALT 0
+#define _MOUSE 1
+#define _SYMBOL 2
+#define _FN 3
+#define _NUM 4
+#define _GW1 5
+#define _GW2 6
+#define _RUS 7
 
-// Each layer gets a name for readability, which is then used in the keymap matrix below.
-// The underscores don't mean anything - you can have a layer called STUFF or any other name.
-// Layer names don't all need to be of the same length, obviously, and you can also skip them
-// entirely and just use numbers.
-#define _QWERTY 0
-#define _LOWER 1
-#define _RAISE 2
-#define _ADJUST 16
-
-enum custom_keycodes {
-  QWERTY = SAFE_RANGE,
-  LOWER,
-  RAISE,
-  ADJUST,
-};
+/* Symbol explanation
+ *
+ * ↓↓   double tap
+ * ⇩    with Shift
+ * ⤓    hold
+ * →    move to layer
+ *
+ */
 
 // Defines for task manager and such
 #define CALTDEL LCTL(LALT(KC_DEL))
 #define TSKMGR LCTL(LSFT(KC_ESC))
 
+// e⤓SYMBOL
+#define LT_SYM_E LT(_SYMBOL, KC_E)
+// space⤓MOUSE
+#define LT_MOU_SPC LT(_MOUSE, KC_SPC)
+// Shift+Ctrl combos
+#define SC(kc) S(C(kc))
+// dodge⤓GW2
+#define DGE_GW2 LT(_GW2, KC_SPC)
+
+// Tap Dance
+enum {
+  TD_OESZ,
+}
+qk_tap_dance_action_t tap_dance_actions[] = {
+  // ö&↓↓ß
+  [TD_OESZ] = ACTION_TAP_DANCE_DOUBLE(DE_ODIA, DE_SS),
+};
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
-/* Qwerty
+/* MALT++
+ * TODO ⤓MOUSE under tab to easier repeat spaces?
  *
  * ,----------------------------------.           ,----------------------------------.
- * |   Q  |   W  |   E  |   R  |   T  |           |   Y  |   U  |   I  |   O  |   P  |
+ * |   ä  |   f  |   y  |   m  |   b  |           |   q  |   l  |   u  | .&⇩: | ö&↓↓ß|
  * |------+------+------+------+------|           |------+------+------+------+------|
- * |   A  |   S  |   D  |   F  |   G  |           |   H  |   J  |   K  |   L  |   ;  |
+ * |a⤓shft| c⤓ctl| i⤓win| t⤓alt|  d⤓hyp|           |r⤓meh | n⤓alt| h⤓win| o⤓ctl|s⤓shft|
  * |------+------+------+------+------|           |------+------+------+------+------|
- * |   Z  |   X  |   C  |   V  |   B  |           |   N  |   M  |   ,  |   .  |   /  |
+ * |   ü  |   p  |   j  |   g  |   k  |           |   x  |   w  |   v  | ,&⇩; |   z  |
  * `----------------------------------'           `----------------------------------'
- *                  ,--------------------.    ,------,-------------.
- *                  | Ctrl | LOWER|      |    |      | RAISE| Shift|
- *                  `-------------| Space|    |BckSpc|------+------.
+ *                ,-----+---------+------.    ,------,------------+------.
+ *                | esc | e⤓SYMBOL|      |    |      |space⤓MOUSE| enter|
+ *                `-----+---------|bckspc|    | tab  |------------+------'
  *                                |      |    |      |
  *                                `------'    `------'
  */
-[_QWERTY] = LAYOUT_split_3x5_3( \
-  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,         KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    \
-  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,         KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, \
-  KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,         KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, \
-                    KC_LCTL, LOWER, KC_SPC,         KC_BSPC, RAISE, OSM(MOD_LSFT)                 \
+[_MALT] = LAYOUT_split_3x5_3( \
+     DE_ADIA,       KC_F,       DE_Y,       KC_M,       KC_B,         KC_Q,       KC_L,       KC_U,     DE_DOT, TD(TD_OESZ), \
+  LSFT(KC_A), LCTL(KC_C), LGUI(KC_I), LALT(KC_T), HYPR(KC_D),    MEH(KC_R), RALT(KC_N), RGUI(KC_H), RCTL(KC_O),  RSFT(KC_S), \
+     DE_UDIA,       KC_P,       KC_J,       KC_G,       KC_K,         KC_X,       KC_W,       KC_V,    DE_COMM,        DE_Z, \
+                              KC_ESC,    LT_SYM_E,   KC_BSPC,       KC_TAB, LT_MOU_SPC,     KC_ENT                           \
 ),
 
-/* Raise
+/* MOUSE+NAV
+ * - Modifiers:
+ * ctl = Ctrl (navigate words) - ctlalt = Ctrl + Alt (switch desktops)
+ * MEH = Shift + Ctl + Alt (move window across desktops) - sftctl = Shift + Ctrl (mark words)
+ *
+ * - Mouse:
+ * ms = move mouse in indicated direction
+ * msleft = Mouse Left Click - msrght = Mouse Right Click - mswhl = Mouse Wheel Click
+ * scrol = scroll in indicated direction
+ * Acc0-2 = set acceleration of mouse (KC_ACL0)
  *
  * ,----------------------------------.           ,----------------------------------.
- * |   1  |   2  |   3  |   4  |   5  |           |   6  |   7  |   8  |   9  |   0  |
+ * | mswhl|msleft|  ms↑ |msrght|  MEH |           |      |msleft|   ↑  |msrght| mswhl|
  * |------+------+------+------+------|           |------+------+------+------+------|
- * |  Tab | Left | Down |  Up  | Right|           |      |   -  |   =  |   [  |   ]  |
+ * |scrol↑|  ms← |  ms↓ |  ms→ |ctlalt|           | pos1 |   ←  |   ↓  |   →  | Ende |
  * |------+------+------+------+------|           |------+------+------+------+------|
- * |  Ctrl|   `  |  GUI |  Alt |      |           |      |      |      |   \  |   '  |
+ * |scrol↓|scrol←|scrol→|  Ctl |sftctl|           |      | Acc2 | Acc1 | Acc0 |      |
  * `----------------------------------'           `----------------------------------'
  *                  ,--------------------.    ,------,-------------.
- *                  |      | LOWER|      |    |      | RAISE|      |
+ *                  |      | shift| caps |    |      | ENTRY|   X  |
+ *                  `-------------| lock |    |   X  |------+------.
+ *                                |      |    |      |
+ *                                `------'    `------'
+ */
+[_MOUSE] = LAYOUT_split_3x5_3( \
+  KC_BTN3, KC_BTN1, KC_MS_U, KC_BTN2,     KC_MEH,    _______, KC_BTN1,   KC_UP,  KC_BTN2, KC_BTN3, \
+  KC_WH_U, KC_MS_L, KC_MS_D, KC_MS_R, C(KC_LALT),    KC_HOME, KC_LEFT, KC_DOWN,  KC_RGHT,  KC_END, \
+  KC_WH_D, KC_WH_L, KC_WH_R, KC_LCTL, S(KC_LCTL),    _______, KC_ACL2, KC_ACL1,  KC_ACL0, _______, \
+                    _______, KC_LSFT,    KC_CAPS,    _______, _______, _______                     \
+),
+
+/* SYMBOL
+ * idea-c - Commenting out in IDEA (Ctrl + NUM /) C(KC_PSLS)
+ *
+ * ,----------------------------------.           ,----------------------------------.
+ * |   `  |   &  |   +  |   =  |   @  |           |   !  |   *  |   #  |   /  |   |  |
+ * |------+------+------+------+------|           |------+------+------+------+------|
+ * |   ^  |   [  |   {  |   (  |   $  |           |   _  |   )  |   }  |   ]  |   -  |
+ * |------+------+------+------+------|           |------+------+------+------+------|
+ * |   ~  |   \  |   %  |   <  |   €  |           |idea-c|   >  |   ´  |   '  |   ?  |
+ * `----------------------------------'           `----------------------------------'
+ *                  ,--------------------.    ,------,-------------.
+ *                  |  ⤓FN | ENTRY|      |    |      | Entf |   "  |
+ *                  `-------------|   X  |    | ⤓NUM |------+------.
+ *                                |      |    |      |
+ *                                `------'    `------'
+ */
+[_SYMBOL] = LAYOUT_split_3x5_3( \
+   DE_GRV, DE_AMPR, DE_PLUS,  DE_EQL,   DE_AT,       DE_EXLM, DE_ASTR, DE_HASH, DE_SLSH, DE_PIPE, \
+  DE_CIRC, DE_LBRC, DE_LCBR, DE_LPRN,  DE_DLR,       DE_UNDS, DE_RPRN, DE_RCBR, DE_RBRC, DE_MINS, \
+  DE_TILD, DE_BSLS, DE_PERC, DE_LABK, DE_EURO,    C(KC_PSLS), DE_RABK, DE_ACUT, DE_QUOT, DE_QUES, \
+                    MO(_FN), _______, _______,      MO(_NUM),  KC_DEL, DE_DQUO                    \
+),
+
+/* F-Keys & Shortcuts for Mouse
+ * X = Cut, C = Copy, V = Paste, B = copy username from KeePass
+ * sfcl (shift ctrl) = with Shift for Terminal
+ *
+ * ,----------------------------------.           ,----------------------------------.
+ * |      |ctrl+B|ctrl+V|   X  |   X  |           |      |  F7  |  F8  |  F9  |  F10 |
+ * |------+------+------+------+------|           |------+------+------+------+------|
+ * |ctrl+X|ctrl+C|ctrl+V|   X  |   X  |           | sf+cl|  F4  |  F5  |  F6  |  F11 |
+ * |------+------+------+------+------|           |------+------+------+------+------|
+ * |sfcl+X|sfcl+C|sfcl+V|   X  |   X  |           | einfg|  F1  |  F2  |  F3  |  F12 |
+ * `----------------------------------'           `----------------------------------'
+ *                  ,--------------------.    ,------,-------------.
+ *                  |ENTRY2|ENTRY1|      |    | ctrl |  alt | ctrl |
+ *                  `-------------|   X  |    | +alt |------+------.
+ *                                |      |    |      |
+ *                                `------'    `------'
+ */
+[_FN] = LAYOUT_split_3x5_3( \
+   _______,  C(KC_B),  C(KC_V), _______, _______,       _______,   KC_F7,   KC_F8, KC_F9, KC_F10, \
+   C(KC_X),  C(KC_C),  C(KC_V), _______, _______,    S(KC_LCTL),   KC_F4,   KC_F5, KC_F6, KC_F11, \
+  SC(KC_X), SC(KC_C), SC(KC_V), _______, _______,        KC_INS,   KC_F1,   KC_F2, KC_F3, KC_F12, \
+                       _______, _______, _______,    C(KC_LALT), KC_LALT, KC_LCTL                 \
+),
+
+/* Numbers & Fitting Symbols
+ * →GW = move to Guild Wars 2 layer
+ *
+ * ,----------------------------------.           ,----------------------------------.
+ * |      |      |   °  |   §  |      |           |      |   7  |   8  |   9  | →GW1 |
+ * |------+------+------+------+------|           |------+------+------+------+------|
+ * |      |   €  |   .  |   ,  |      |           |      |   4  |   5  |   6  |      |
+ * |------+------+------+------+------|           |------+------+------+------+------|
+ * |      |      |      |      |      |           |      |   1  |   2  |   3  |      |
+ * `----------------------------------'           `----------------------------------'
+ *                  ,--------------------.    ,------,-------------.
+ *                  |      |ENTRY1|      |    |      |      |   0  |
+ *                  `-------------|   X  |    |ENTRY2|------+------.
+ *                                |      |    |      |
+ *                                `------'    `------'
+ */
+[_NUM] = LAYOUT_split_3x5_3( \
+  _______, _______,  DE_DEG, DE_SECT, _______,      _______,    KC_7, KC_8, KC_9, TO(_GW1), \
+  _______, DE_EURO,  DE_DOT, DE_COMM, _______,      _______,    KC_4, KC_5, KC_6,  _______, \
+  _______, _______, _______, _______, _______,      _______,    KC_1, KC_2, KC_3,  _______, \
+                    _______, _______, _______,      _______, _______, KC_0                  \
+),
+
+/* Guild Wars 2
+ * enemy = next enemy & roller beetle slide
+ *
+ * ,----------------------------------.           ,----------------------------------.
+ * |skill2|skill3|skill4|skill5|skill8|           |  esc |  LFG |      |      | EXIT | (ENTRY unheld)
+ * |------+------+------+------+------|           |------+------+------+------+------|
+ * |skill7| heal |   ↑  | elite|skill9|           | GUILD|  MAP | HERO | BLTC |      |
+ * |------+------+------+------+------|           |------+------+------+------+------|
+ * |swapWp|   ←  |   ↓  |   →  |action|           |      |  INV |      |      |      |
+ * `----------------------------------'           `----------------------------------'
+ *                  ,--------------------.    ,------,-------------.
+ *                  | enemy| dodge| jump |    |      |      |action|
+ *                  `--------⤓GW2-| swim↑|    |skill1|------+------.
+ *                                | fly↑ |    |      |
+ *                                `------'    `------'
+ */
+[_GW1] = LAYOUT_split_3x5_3( \
+  _______, _______, _______, _______, _______,      _______, _______, _______, _______, TG(_GW1), \
+  _______, _______, _______, _______, _______,      _______, _______, _______, _______, _______, \
+  _______, _______, _______, _______, _______,      _______, _______, _______, _______, _______, \
+                    _______, DGE_GW2, _______,      _______, _______, _______                    \
+),
+
+/* Guild Wars 2 II
+ *
+ * ,----------------------------------.           ,----------------------------------.
+ * | RAPT | HASI |ROCHEN| SCHAK| KÄFER|           |      | STUHL| MUSIK|      |      |
+ * |------+------+------+------+------|           |------+------+------+------+------|
+ * |   F1 |   F2 |   F3 |   F4 |WARCLW|           |      | DEKO | VERW |      |      |
+ * |------+------+------+------+------|           |------+------+------+------+------|
+ * | REIT |      |      | WAFFE|SKYSCL|           |      |      |      |      |      |
+ * `----------------------------------'           `----------------------------------'
+ *                  ,--------------------.    ,------,-------------.
+ *                  |      | ENTRY|      |    |      |      |      |
  *                  `-------------|      |    |      |------+------.
  *                                |      |    |      |
  *                                `------'    `------'
  */
-[_RAISE] = LAYOUT_split_3x5_3( \
-  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,         KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    \
-  KC_TAB,    KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT,      _______, KC_MINS, KC_EQL,  KC_LBRC, KC_RBRC, \
-  KC_LCTL, KC_GRV,  KC_LGUI, KC_LALT, _______,      _______, _______, _______, KC_BSLS,  KC_QUOT, \
+[_GW2] = LAYOUT_split_3x5_3( \
+  _______, _______, _______, _______, _______,      _______, _______, _______, _______, _______, \
+  _______, _______, _______, _______, _______,      _______, _______, _______, _______, _______, \
+  _______, _______, _______, _______, _______,      _______, _______, _______, _______, _______, \
                     _______, _______, _______,      _______, _______, _______                    \
 ),
 
-/* Lower
+/* Russian Layout
  *
  * ,----------------------------------.           ,----------------------------------.
- * |   !  |   @  |   #  |   $  |   %  |           |   ^  |   &  |   *  |   (  |   )  |
+ * |      |      |      |      |      |           |      |      |      |      |      |
  * |------+------+------+------+------|           |------+------+------+------+------|
- * |  Esc |      |      |      |      |           |      |   _  |   +  |   {  |   }  |
+ * |      |      |      |      |      |           |      |      |      |      |      |
  * |------+------+------+------+------|           |------+------+------+------+------|
- * |  Caps|   ~  |      |      |      |           |      |      |      |   |  |   "  |
+ * |      |      |      |      |      |           |      |      |      |      |      |
  * `----------------------------------'           `----------------------------------'
  *                  ,--------------------.    ,------,-------------.
- *                  |      | LOWER|      |    |      | RAISE|  Del |
- *                  `-------------|      |    | Enter|------+------.
- *                                |      |    |      |
- *                                `------'    `------'
- */
-[_LOWER] = LAYOUT_split_3x5_3( \
-  KC_EXLM, KC_AT,   KC_HASH, KC_DLR,  KC_PERC,      KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, \
-  KC_ESC,  _______, _______, _______, _______,      _______, KC_UNDS, KC_PLUS, KC_LCBR, KC_RCBR, \
-  KC_CAPS, KC_TILD, _______, _______, _______,      _______, _______, _______, KC_PIPE,  KC_DQT, \
-                    _______, _______, _______,      KC_ENT,  _______, KC_DEL                    \
-),
-
-/* Adjust (Lower + Raise)
- *
- * ,----------------------------------.           ,----------------------------------.
- * |  F1  |  F2  |  F3  |  F4  |  F5  |           |   F6 |  F7  |  F8  |  F9  |  F10 |
- * |------+------+------+------+------|           |------+------+------+------+------|
- * |  F11 |  F12 |      |      |      |           |      |      |      |Taskmg|caltde|
- * |------+------+------+------+------|           |------+------+------+------+------|
- * | Reset|      |      |      |      |           |      |      |      |      |      |
- * `----------------------------------'           `----------------------------------'
- *                  ,--------------------.    ,------,-------------.
- *                  |      | LOWER|      |    |      | RAISE|      |
+ *                  |      |      |      |    |      |      |      |
  *                  `-------------|      |    |      |------+------.
  *                                |      |    |      |
  *                                `------'    `------'
  */
-[_ADJUST] =  LAYOUT_split_3x5_3( \
-  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,        KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10, \
-  KC_F11,  KC_F12,  _______, _______, _______,      _______, _______, _______, TSKMGR, CALTDEL, \
-  RESET,   _______, _______, _______, _______,      _______, _______, _______, _______,  _______, \
-                    _______, _______, _______,      _______,  _______, _______                    \
+[_RUS] = LAYOUT_split_3x5_3( \
+  _______, _______, _______, _______, _______,      _______, _______, _______, _______, _______, \
+  _______, _______, _______, _______, _______,      _______, _______, _______, _______, _______, \
+  _______, _______, _______, _______, _______,      _______, _______, _______, _______, _______, \
+                    _______, _______, _______,      _______, _______, _______                    \
 )
 };
 
 void persistant_default_layer_set(uint16_t default_layer) {
   eeconfig_update_default_layer(default_layer);
   default_layer_set(default_layer);
-}
-
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  switch (keycode) {
-    case QWERTY:
-      if (record->event.pressed) {
-        #ifdef AUDIO_ENABLE
-          PLAY_SONG(tone_qwerty);
-        #endif
-        persistant_default_layer_set(1UL<<_QWERTY);
-      }
-      return false;
-      break;
-    case LOWER:
-      if (record->event.pressed) {
-        layer_on(_LOWER);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
-      } else {
-        layer_off(_LOWER);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
-      }
-      return false;
-      break;
-    case RAISE:
-      if (record->event.pressed) {
-        layer_on(_RAISE);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
-      } else {
-        layer_off(_RAISE);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
-      }
-      return false;
-      break;
-    case ADJUST:
-      if (record->event.pressed) {
-        layer_on(_ADJUST);
-      } else {
-        layer_off(_ADJUST);
-      }
-      return false;
-      break;
-  }
-  return true;
 }
