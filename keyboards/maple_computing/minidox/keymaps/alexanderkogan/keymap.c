@@ -42,6 +42,13 @@ tap_dance_action_t tap_dance_actions[] = {
   [TD_OESZ] = ACTION_TAP_DANCE_DOUBLE(DE_ODIA, DE_SS),
 };
 
+// TODO flash keyboard as explained here: https://docs.qmk.fm/newbs_flashing#flash-your-keyboard-from-the-command-line
+// test https://config.qmk.fm/#/test/
+// learn typing: https://www.typelit.io/
+// TODO add GW layer and RU layer
+// RU layer: https://docs.google.com/spreadsheets/d/1bJZihoxxpu_nwltb62ZOAVDxlDpHku6pF3eVwSFM0QM/edit?gid=958025284#gid=958025284
+// https://www.reddit.com/r/KeyboardLayouts/comments/1ceb01h/russian_keyboard_layouts/
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 /* MALT++
@@ -61,10 +68,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *                                `------'    `------'
  */
 [_MALT] = LAYOUT_split_3x5_3( \
-     DE_ADIA,       KC_F,       DE_Y,       KC_M,       KC_B,         KC_Q,       KC_L,       KC_U,     DE_DOT, TD(TD_OESZ), \
-  LSFT(KC_A), LCTL(KC_C), LGUI(KC_I), LALT(KC_T), HYPR(KC_D),    MEH(KC_R), RALT(KC_N), RGUI(KC_H), RCTL(KC_O),  RSFT(KC_S), \
-     DE_UDIA,       KC_P,       KC_J,       KC_G,       KC_K,         KC_X,       KC_W,       KC_V,    DE_COMM,        DE_Z, \
-                              KC_ESC,    LT_SYM_E,   KC_BSPC,       KC_TAB, LT_MOU_SPC,     KC_ENT                           \
+      DE_ADIA,        KC_F,        DE_Y,        KC_M,         KC_B,           KC_Q,         KC_L,         KC_U,       DE_DOT,   TD(TD_OESZ), \
+  SFT_T(KC_A), CTL_T(KC_C), GUI_T(KC_I), ALT_T(KC_T), HYPR_T(KC_D),    MEH_T(KC_R), RALT_T(KC_N), RGUI_T(KC_H), RCTL_T(KC_O),  RSFT_T(KC_S), \
+      DE_UDIA,        KC_P,        KC_J,        KC_G,         KC_K,           KC_X,         KC_W,         KC_V,      DE_COMM,          DE_Z, \
+                                 KC_ESC,    LT_SYM_E,      KC_BSPC,         KC_TAB,   LT_MOU_SPC,       KC_ENT                               \
 ),
 
 /* MOUSE+NAV
